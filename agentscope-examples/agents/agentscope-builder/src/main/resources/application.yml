@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
@@ -95,6 +95,14 @@ builder:
     api-key: ${DASHSCOPE_API_KEY:}
     model-name: ${BUILDER_MODEL_NAME:${CLAW_MODEL_NAME:qwen-max}}
     stream: true
+
+  # ---- DeepSeek model (OpenAI-compatible protocol, preferred over DashScope) ----
+  # When builder.deepseek.api-key (or DEEPSEEK_API_KEY) is set, DeepSeekModelConfig
+  # registers a Model bean and the DashScope fallback above is skipped automatically.
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+    model-name: ${DEEPSEEK_MODEL_NAME:deepseek-chat}
+    stream: ${DEEPSEEK_STREAM:true}
 
   # ---- Agent defaults (used when auto-generating agentscope.json) ----
   agent:

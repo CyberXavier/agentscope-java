@@ -10,7 +10,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        // 代理到 Spring Boot 后端实际端口（见 application.yml 的 server.port）
+        target: 'http://localhost:8081',
         changeOrigin: true,
       },
     },
