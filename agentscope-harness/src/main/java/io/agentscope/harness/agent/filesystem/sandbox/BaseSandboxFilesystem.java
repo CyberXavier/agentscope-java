@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base sandbox implementation with {@link #execute} as the core abstract method.
@@ -53,6 +55,8 @@ import java.util.Map;
  * </ul>
  */
 public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem {
+
+    private static final Logger log = LoggerFactory.getLogger(BaseSandboxFilesystem.class);
 
     @Override
     public abstract String id();
@@ -163,13 +167,20 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
     @Override
     public WriteResult write(RuntimeContext runtimeContext, String filePath, String content) {
         String escapedPath = FilesystemUtils.shellQuote(filePath);
+        String normalizedPath = filePath.replace('\\', '/');
+        int parentSeparator = normalizedPath.lastIndexOf('/');
+        String parentDirectory =
+                parentSeparator < 0
+                        ? "."
+                        : parentSeparator == 0 ? "/" : normalizedPath.substring(0, parentSeparator);
+        String escapedParentDirectory = FilesystemUtils.shellQuote(parentDirectory);
         String checkCmd =
                 "if [ -e "
                         + escapedPath
                         + " ]; then echo 'EXISTS'; exit 1; fi; "
-                        + "mkdir -p \"$(dirname "
-                        + escapedPath
-                        + ")\" 2>&1";
+                        + "mkdir -p "
+                        + escapedParentDirectory
+                        + " 2>&1";
 
         ExecuteResponse checkResult = execute(runtimeContext, checkCmd, null);
         if (checkResult.exitCode() != null && checkResult.exitCode() != 0) {
@@ -180,6 +191,12 @@ public abstract class BaseSandboxFilesystem implements AbstractSandboxFilesystem
                                 + " because it already exists. Read and then make an"
                                 + " edit, or write to a new path.");
             }
+            log.warn(
+                    "沙箱 write_file 写前预检失败 [path={}, exitCode={}, output={}, truncated={}]",
+                    filePath,
+                    checkResult.exitCode(),
+                    checkResult.output(),
+                    checkResult.truncated());
             return WriteResult.fail("Failed to write file '" + filePath + "'");
         }
 

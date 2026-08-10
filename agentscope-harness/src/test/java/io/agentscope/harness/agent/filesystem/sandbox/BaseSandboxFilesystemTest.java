@@ -130,6 +130,19 @@ class BaseSandboxFilesystemTest {
             assertTrue(dir.isDirectory());
             assertFalse(dir.modifiedAt().isEmpty(), "dir modifiedAt should be populated");
         }
+
+        /** 写前预检应由 Java 解析父目录，避免向 Windows Docker 传递嵌套 shell 引号。 */
+        @Test
+        void write_resolvesParentDirectoryWithoutShellCommandSubstitution() {
+            FakeSandboxFilesystem filesystem = new FakeSandboxFilesystem();
+
+            filesystem.write(RT, ".tmp/conversation/message/test.txt", "content");
+
+            assertEquals(
+                    "if [ -e '.tmp/conversation/message/test.txt' ]; then echo 'EXISTS'; exit 1;"
+                            + " fi; mkdir -p '.tmp/conversation/message' 2>&1",
+                    filesystem.lastCommand);
+        }
     }
 
     // ================================================================
