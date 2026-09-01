@@ -102,3 +102,4 @@ agentscope-service/aistio/coverage.*
 agentscope-service/aistio/.idea/
 agentscope-service/.dev-stack/
 /docs/docs-local/
+/agentscope-examples/agentscope-copilotkit/src/main/resources/static/
